@@ -1,129 +1,96 @@
 /**
- * Export Report Use Case - Application Layer
- * Caso de uso para exportar reportes en diferentes formatos
+ * Export Report Use Case - Lógica de negocio para exportar reportes
  */
 
-import { SaleRepository } from '../domain/repositories/sale.repository.js';
-import { Sale } from '../domain/entities/sale.entity.js';
+import { SaleRepository, SaleData } from '../domain/repositories/sale.repository.js';
 
-export interface ExportReportDTO {
-  format: 'json' | 'csv';
-  period: 'today' | 'week' | 'month' | 'custom';
+export interface ExportReportQuery {
+  format: 'csv' | 'json';
   startDate?: Date;
   endDate?: Date;
-}
-
-export interface ExportReportResponse {
-  filename: string;
-  content: string;
-  mimeType: string;
 }
 
 export class ExportReportUseCase {
   constructor(private saleRepository: SaleRepository) {}
 
-  async execute(dto: ExportReportDTO): Promise<ExportReportResponse> {
-    // Obtener ventas según el período
-    let sales: Sale[];
+  async execute(query: ExportReportQuery): Promise<string> {
+    const { format, startDate, endDate } = query;
 
-    switch (dto.period) {
-      case 'today':
-        sales = await this.saleRepository.findByToday();
-        break;
-      case 'week':
-        sales = await this.saleRepository.findByWeek();
-        break;
-      case 'month':
-        sales = await this.saleRepository.findByMonth();
-        break;
-      case 'custom':
-        if (!dto.startDate || !dto.endDate) {
-          throw new Error('Para período personalizado se requieren fechas');
-        }
-        sales = await this.saleRepository.findByDateRange(dto.startDate, dto.endDate);
-        break;
-      default:
-        sales = await this.saleRepository.findAll();
-    }
-
-    // Generar reporte según formato
-    if (dto.format === 'csv') {
-      return this.generateCSV(sales, dto.period);
+    // Obtener ventas según filtros
+    let sales: SaleData[];
+    if (startDate && endDate) {
+      sales = await this.saleRepository.findByDateRange(startDate, endDate);
     } else {
-      return this.generateJSON(sales, dto.period);
+      sales = await this.saleRepository.findAll();
+    }
+
+    // Exportar según formato
+    if (format === 'json') {
+      return this.exportJSON(sales);
+    } else {
+      return this.exportCSV(sales);
     }
   }
 
-  private generateCSV(sales: Sale[], period: string): ExportReportResponse {
-    // Encabezados CSV
-    const headers = [
-      'ID Venta',
-      'Fecha',
-      'Cliente',
-      'Producto',
-      'Cantidad',
-      'Precio Unitario',
-      'Subtotal',
-      'Total Venta'
-    ];
-
-    let csvContent = headers.join(',') + '\n';
-
-    // Datos
-    for (const sale of sales) {
-      for (const item of sale.items) {
-        const row = [
-          sale.id,
-          sale.date.toISOString(),
-          sale.customerName || 'N/A',
-          `"${item.productName}"`, // Comillas para nombres con comas
-          item.quantity,
-          item.price.toFixed(2),
-          item.subtotal.toFixed(2),
-          sale.total.toFixed(2)
-        ];
-        csvContent += row.join(',') + '\n';
-      }
-    }
-
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `reporte_ventas_${period}_${timestamp}.csv`;
-
-    return {
-      filename,
-      content: csvContent,
-      mimeType: 'text/csv'
-    };
-  }
-
-  private generateJSON(sales: Sale[], period: string): ExportReportResponse {
-    const data = {
-      generatedAt: new Date().toISOString(),
-      period,
+  private exportJSON(sales: SaleData[]): string {
+    return JSON.stringify({
+      exportDate: new Date().toISOString(),
       totalSales: sales.length,
       totalRevenue: sales.reduce((sum, sale) => sum + sale.total, 0),
       sales: sales.map(sale => ({
         id: sale.id,
-        date: sale.date.toISOString(),
-        customerName: sale.customerName,
+        date: sale.date,
         total: sale.total,
-        items: sale.items.map(item => ({
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.subtotal
-        }))
+        items: sale.items
       }))
-    };
+    }, null, 2);
+  }
 
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `reporte_ventas_${period}_${timestamp}.json`;
+  private exportCSV(sales: SaleData[]): string {
+    // Header
+    let csv = 'ID,Fecha,Total,Cantidad Items,Productos\n';
+
+    // Filas
+    for (const sale of sales) {
+      const products = sale.items
+        .map(item => `${item.productName} (x${item.quantity})`)
+        .join('; ');
+
+      const date = sale.date instanceof Date 
+        ? sale.date.toISOString() 
+        : new Date(sale.date).toISOString();
+
+      csv += `${sale.id},${date},${sale.total},${sale.items.length},"${products}"\n`;
+    }
+
+    return csv;
+  }
+
+  async getSummary(startDate?: Date, endDate?: Date): Promise<{
+    totalRevenue: number;
+    totalSales: number;
+    averageTicket: number;
+    topProducts: any[];
+  }> {
+    // Obtener ventas
+    let sales: SaleData[];
+    if (startDate && endDate) {
+      sales = await this.saleRepository.findByDateRange(startDate, endDate);
+    } else {
+      sales = await this.saleRepository.findAll();
+    }
+
+    const totalSales = sales.length;
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+    const topProducts = await this.saleRepository.getTopProducts(10);
 
     return {
-      filename,
-      content: JSON.stringify(data, null, 2),
-      mimeType: 'application/json'
+      totalRevenue,
+      totalSales,
+      averageTicket,
+      topProducts
     };
   }
 }

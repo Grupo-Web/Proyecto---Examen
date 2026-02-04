@@ -1,108 +1,119 @@
 /**
- * Report Controller - Interfaces Layer
- * Maneja las peticiones HTTP para reportes y exportación
+ * Report Controller - Maneja reportes y estadísticas de ventas
  */
 
 import { Request, Response } from 'express';
-import { GetSalesReportUseCase } from '../../application/get-sales-report.usecase.js';
-import { ExportReportUseCase } from '../../application/export-report.usecase.js';
+import { SaleRepository } from '../../domain/repositories/sale.repository.js';
+import { ProductRepository } from '../../domain/repositories/product.repository.js';
+
+/**
+ * Helper para obtener string de req.query
+ */
+function getStringParam(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined;
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export class ReportController {
   constructor(
-    private getSalesReportUseCase: GetSalesReportUseCase,
-    private exportReportUseCase: ExportReportUseCase
+    private saleRepository: SaleRepository,
+    private productRepository: ProductRepository
   ) {}
 
-  // GET /api/reports/sales?period=today|week|month|custom&startDate=...&endDate=...
+  /**
+   * GET /api/reports/sales - Obtener reporte general de ventas
+   */
   async getSalesReport(req: Request, res: Response): Promise<void> {
     try {
-      const { period, startDate, endDate } = req.query;
+      const startDateParam = getStringParam(req.query.startDate as string | string[] | undefined);
+      const endDateParam = getStringParam(req.query.endDate as string | string[] | undefined);
 
-      // Validar período
-      const validPeriods = ['today', 'week', 'month', 'custom'];
-      if (!period || !validPeriods.includes(period as string)) {
-        res.status(400).json({ 
-          error: 'Período inválido',
-          message: 'period debe ser: today, week, month o custom' 
-        });
-        return;
-      }
-
-      // Validar fechas para período personalizado
-      if (period === 'custom') {
-        if (!startDate || !endDate) {
-          res.status(400).json({ 
-            error: 'Fechas requeridas',
-            message: 'Para período custom se requieren startDate y endDate' 
-          });
+      let sales;
+      
+      if (startDateParam && endDateParam) {
+        const startDate = new Date(startDateParam);
+        const endDate = new Date(endDateParam);
+        
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          res.status(400).json({ error: 'Fechas inválidas' });
           return;
         }
+        
+        sales = await this.saleRepository.findByDateRange(startDate, endDate);
+      } else {
+        sales = await this.saleRepository.findAll();
       }
 
-      const report = await this.getSalesReportUseCase.execute({
-        period: period as any,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined
-      });
+      const totalSales = sales.length;
+      const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+      const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
-      res.json(report);
-    } catch (error: any) {
+      res.json({
+        totalSales,
+        totalRevenue,
+        averageTicket,
+        sales
+      });
+    } catch (error) {
+      console.error('Error al obtener reporte de ventas:', error);
       res.status(500).json({ 
-        error: 'Error al generar reporte', 
-        message: error.message 
+        error: 'Error al obtener reporte',
+        message: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }
 
-  // GET /api/reports/export?format=json|csv&period=today|week|month|custom&startDate=...&endDate=...
+  /**
+   * GET /api/reports/top-products - Obtener productos más vendidos
+   */
+  async getTopProducts(req: Request, res: Response): Promise<void> {
+    try {
+      const limitParam = getStringParam(req.query.limit as string | string[] | undefined);
+      const limit = limitParam ? parseInt(limitParam) : 10;
+
+      if (isNaN(limit) || limit <= 0) {
+        res.status(400).json({ error: 'El parámetro limit debe ser un número positivo' });
+        return;
+      }
+
+      const topProducts = await this.saleRepository.getTopProducts(limit);
+      res.json(topProducts);
+    } catch (error) {
+      console.error('Error al obtener productos más vendidos:', error);
+      res.status(500).json({ 
+        error: 'Error al obtener productos más vendidos',
+        message: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
+  /**
+   * GET /api/reports/export - Exportar reporte en formato CSV
+   */
   async exportReport(req: Request, res: Response): Promise<void> {
     try {
-      const { format, period, startDate, endDate } = req.query;
+      const sales = await this.saleRepository.findAll();
 
-      // Validar formato
-      const validFormats = ['json', 'csv'];
-      if (!format || !validFormats.includes(format as string)) {
-        res.status(400).json({ 
-          error: 'Formato inválido',
-          message: 'format debe ser: json o csv' 
-        });
-        return;
-      }
+      // Generar CSV
+      const csvHeader = 'ID,Fecha,Total,Productos\n';
+      const csvRows = sales.map(sale => {
+        const products = sale.items.map(item => 
+          `${item.productName} (x${item.quantity})`
+        ).join('; ');
+        
+        return `${sale.id},${sale.date.toISOString()},${sale.total},"${products}"`;
+      }).join('\n');
 
-      // Validar período
-      const validPeriods = ['today', 'week', 'month', 'custom'];
-      if (!period || !validPeriods.includes(period as string)) {
-        res.status(400).json({ 
-          error: 'Período inválido',
-          message: 'period debe ser: today, week, month o custom' 
-        });
-        return;
-      }
+      const csv = csvHeader + csvRows;
 
-      // Validar fechas para período personalizado
-      if (period === 'custom' && (!startDate || !endDate)) {
-        res.status(400).json({ 
-          error: 'Fechas requeridas',
-          message: 'Para período custom se requieren startDate y endDate' 
-        });
-        return;
-      }
-
-      const report = await this.exportReportUseCase.execute({
-        format: format as any,
-        period: period as any,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined
-      });
-
-      // Configurar headers para descarga
-      res.setHeader('Content-Type', report.mimeType);
-      res.setHeader('Content-Disposition', `attachment; filename="${report.filename}"`);
-      res.send(report.content);
-    } catch (error: any) {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=ventas.csv');
+      res.send(csv);
+    } catch (error) {
+      console.error('Error al exportar reporte:', error);
       res.status(500).json({ 
-        error: 'Error al exportar reporte', 
-        message: error.message 
+        error: 'Error al exportar reporte',
+        message: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }

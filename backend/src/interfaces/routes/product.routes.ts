@@ -1,26 +1,41 @@
 /**
- * Product Routes - Interfaces Layer
- * Define las rutas para el MANTENEDOR de productos
+ * Product Routes - Define las rutas para el mantenedor de productos
  */
 
 import { Router } from 'express';
 import { ProductController } from '../controllers/product.controller.js';
 
-export function createProductRoutes(controller: ProductController): Router {
-  const router = Router();
+export class ProductRoutes {
+  private router: Router;
+  private controller: ProductController;
 
-  // Obtener todas las categorías
-  router.get('/categories', (req, res) => controller.getCategories(req, res));
+  constructor(controller: ProductController) {
+    this.router = Router();
+    this.controller = controller;
+    this.initializeRoutes();
+  }
 
-  // Obtener productos por categoría
-  router.get('/category/:category', (req, res) => controller.getByCategory(req, res));
+  private initializeRoutes(): void {
+    // GET /api/products - Obtener todos los productos
+    this.router.get('/', this.controller.getAllProducts.bind(this.controller));
 
-  // CRUD de productos
-  router.get('/', (req, res) => controller.getAll(req, res));
-  router.get('/:id', (req, res) => controller.getById(req, res));
-  router.post('/', (req, res) => controller.create(req, res));
-  router.put('/:id', (req, res) => controller.update(req, res));
-  router.delete('/:id', (req, res) => controller.delete(req, res));
+    // GET /api/products/:id - Obtener producto por ID
+    this.router.get('/:id', this.controller.getProductById.bind(this.controller));
 
-  return router;
+    // POST /api/products - Crear nuevo producto
+    this.router.post('/', this.controller.createProduct.bind(this.controller));
+
+    // PUT /api/products/:id - Actualizar producto
+    this.router.put('/:id', this.controller.updateProduct.bind(this.controller));
+
+    // DELETE /api/products/:id - Eliminar producto
+    this.router.delete('/:id', this.controller.deleteProduct.bind(this.controller));
+
+    // GET /api/products/category/:category - Obtener productos por categoría
+    this.router.get('/category/:category', this.controller.getProductsByCategory.bind(this.controller));
+  }
+
+  public getRouter(): Router {
+    return this.router;
+  }
 }

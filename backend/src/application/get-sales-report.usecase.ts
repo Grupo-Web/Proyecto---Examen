@@ -1,140 +1,82 @@
 /**
- * Get Sales Report Use Case - Application Layer
- * Caso de uso para obtener reportes y análisis de ventas
+ * Get Sales Report Use Case - Lógica de negocio para obtener reportes de ventas
  */
 
-import { SaleRepository } from '../domain/repositories/sale.repository.js';
-import { Sale } from '../domain/entities/sale.entity.js';
+import { SaleRepository, SaleData, TopProduct } from '../domain/repositories/sale.repository.js';
 
 export interface SalesReportDTO {
-  period: 'today' | 'week' | 'month' | 'custom';
-  startDate?: Date;
-  endDate?: Date;
+  totalSales: number;
+  totalRevenue: number;
+  averageTicket: number;
+  sales: SaleData[];
+  topProducts?: TopProduct[];
 }
 
-export interface SalesReportResponse {
-  sales: Sale[];
-  statistics: {
-    totalSales: number;
-    totalRevenue: number;
-    averageTicket: number;
-    totalProducts: number;
-  };
-  topProducts: Array<{
-    productId: string;
-    productName: string;
-    totalQuantity: number;
-    totalRevenue: number;
-  }>;
-  salesByDate: Array<{
-    date: string;
-    count: number;
-    revenue: number;
-  }>;
-  salesByCategory: Array<{
-    category: string;
-    count: number;
-    revenue: number;
-  }>;
+export interface GetSalesReportQuery {
+  startDate?: Date;
+  endDate?: Date;
+  period?: 'day' | 'week' | 'month' | 'year';
+  limit?: number;
 }
 
 export class GetSalesReportUseCase {
   constructor(private saleRepository: SaleRepository) {}
 
-  async execute(dto: SalesReportDTO): Promise<SalesReportResponse> {
-    let sales: Sale[];
+  async execute(query: GetSalesReportQuery = {}): Promise<SalesReportDTO> {
+    const { startDate, endDate, period, limit = 10 } = query;
 
-    // Obtener ventas según el período
-    switch (dto.period) {
-      case 'today':
-        sales = await this.saleRepository.findByToday();
-        break;
-      case 'week':
-        sales = await this.saleRepository.findByWeek();
-        break;
-      case 'month':
-        sales = await this.saleRepository.findByMonth();
-        break;
-      case 'custom':
-        if (!dto.startDate || !dto.endDate) {
-          throw new Error('Para período personalizado se requieren fechas de inicio y fin');
-        }
-        sales = await this.saleRepository.findByDateRange(dto.startDate, dto.endDate);
-        break;
-      default:
-        sales = await this.saleRepository.findAll();
+    let sales: SaleData[];
+
+    // Determinar rango de fechas según el período
+    if (period) {
+      const now = new Date();
+      let start: Date;
+
+      switch (period) {
+        case 'day':
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'year':
+          start = new Date(now.getFullYear(), 0, 1);
+          break;
+      }
+
+      sales = await this.saleRepository.findByDateRange(start, now);
+    } else if (startDate && endDate) {
+      // Usar fechas específicas
+      sales = await this.saleRepository.findByDateRange(startDate, endDate);
+    } else if (startDate) {
+      // Solo fecha de inicio - hasta ahora
+      sales = await this.saleRepository.findByDateRange(startDate, new Date());
+    } else if (endDate) {
+      // Solo fecha de fin - desde hace 30 días
+      const start = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      sales = await this.saleRepository.findByDateRange(start, endDate);
+    } else {
+      // Sin filtros - todas las ventas
+      sales = await this.saleRepository.findAll();
     }
 
-    // Obtener estadísticas generales
-    const statistics = await this.saleRepository.getStatistics();
+    // Calcular estadísticas
+    const totalSales = sales.length;
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
     // Obtener top productos
-    const topProducts = await this.saleRepository.getTopProducts(10);
-
-    // Agrupar ventas por fecha
-    const salesByDate = this.groupSalesByDate(sales);
-
-    // Agrupar ventas por categoría
-    const salesByCategory = this.groupSalesByCategory(sales);
+    const topProducts = await this.saleRepository.getTopProducts(limit);
 
     return {
+      totalSales,
+      totalRevenue,
+      averageTicket,
       sales,
-      statistics,
-      topProducts,
-      salesByDate,
-      salesByCategory
+      topProducts
     };
-  }
-
-  private groupSalesByDate(sales: Sale[]): Array<{
-    date: string;
-    count: number;
-    revenue: number;
-  }> {
-    const grouped = new Map<string, { count: number; revenue: number }>();
-
-    for (const sale of sales) {
-      const dateKey = sale.date.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      if (!grouped.has(dateKey)) {
-        grouped.set(dateKey, { count: 0, revenue: 0 });
-      }
-
-      const current = grouped.get(dateKey)!;
-      current.count++;
-      current.revenue += sale.total;
-    }
-
-    return Array.from(grouped.entries())
-      .map(([date, data]) => ({ date, ...data }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }
-
-  private groupSalesByCategory(sales: Sale[]): Array<{
-    category: string;
-    count: number;
-    revenue: number;
-  }> {
-    const grouped = new Map<string, { count: number; revenue: number }>();
-
-    for (const sale of sales) {
-      for (const item of sale.items) {
-        // Asumimos que el nombre del producto contiene la categoría
-        // En una implementación real, deberías obtener la categoría del producto
-        const category = 'General'; // Por ahora usamos una categoría por defecto
-
-        if (!grouped.has(category)) {
-          grouped.set(category, { count: 0, revenue: 0 });
-        }
-
-        const current = grouped.get(category)!;
-        current.count += item.quantity;
-        current.revenue += item.subtotal;
-      }
-    }
-
-    return Array.from(grouped.entries())
-      .map(([category, data]) => ({ category, ...data }))
-      .sort((a, b) => b.revenue - a.revenue);
   }
 }

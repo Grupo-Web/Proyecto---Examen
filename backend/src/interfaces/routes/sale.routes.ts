@@ -1,27 +1,35 @@
 /**
- * Sale Routes - Interfaces Layer
- * Define las rutas para el PROCESO de ventas
+ * Sale Routes - Define las rutas para el proceso de ventas
  */
 
 import { Router } from 'express';
 import { SaleController } from '../controllers/sale.controller.js';
 
-export function createSaleRoutes(controller: SaleController): Router {
-  const router = Router();
+export class SaleRoutes {
+  private router: Router;
+  private controller: SaleController;
 
-  // Estadísticas y análisis
-  router.get('/statistics', (req, res) => controller.getStatistics(req, res));
-  router.get('/top-products', (req, res) => controller.getTopProducts(req, res));
+  constructor(controller: SaleController) {
+    this.router = Router();
+    this.controller = controller;
+    this.initializeRoutes();
+  }
 
-  // Ventas por período
-  router.get('/period/today', (req, res) => controller.getToday(req, res));
-  router.get('/period/week', (req, res) => controller.getWeek(req, res));
-  router.get('/period/month', (req, res) => controller.getMonth(req, res));
+  private initializeRoutes(): void {
+    // GET /api/sales - Obtener todas las ventas
+    this.router.get('/', this.controller.getAllSales.bind(this.controller));
 
-  // CRUD de ventas
-  router.get('/', (req, res) => controller.getAll(req, res));
-  router.get('/:id', (req, res) => controller.getById(req, res));
-  router.post('/', (req, res) => controller.create(req, res));
+    // GET /api/sales/:id - Obtener venta por ID
+    this.router.get('/:id', this.controller.getSaleById.bind(this.controller));
 
-  return router;
+    // POST /api/sales - Registrar nueva venta
+    this.router.post('/', this.controller.createSale.bind(this.controller));
+
+    // GET /api/sales/date-range - Obtener ventas por rango de fechas
+    this.router.get('/date-range', this.controller.getSalesByDateRange.bind(this.controller));
+  }
+
+  public getRouter(): Router {
+    return this.router;
+  }
 }

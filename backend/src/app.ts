@@ -1,99 +1,119 @@
 /**
- * App.ts - Configuración principal de Express
- * Configura middleware, rutas y dependencias
+ * Application Entry Point
+ * Configura Express, inicializa la base de datos y define las rutas
  */
 
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { getDatabase, closeDatabase } from './infrastructure/database/sqlite/sqlite.connection.js';
 
-// Infrastructure
-import { getConnection } from './infrastructure/database/sqlite/sqlite.connection.js';
-import { SQLiteProductRepository } from './infrastructure/repositories/product.repository.impl.js';
-import { SQLiteSaleRepository } from './infrastructure/repositories/sale.repository.impl.js';
+// Repositorios
+import { ProductRepositoryImpl } from './infrastructure/repositories/product.repository.impl.js';
+import { SaleRepositoryImpl } from './infrastructure/repositories/sale.repository.impl.js';
 
-// Application
-import { CreateSaleUseCase } from './application/create-sale.usecase.js';
-import { GetSalesReportUseCase } from './application/get-sales-report.usecase.js';
-import { ExportReportUseCase } from './application/export-report.usecase.js';
-
-// Interfaces
+// Controladores
 import { ProductController } from './interfaces/controllers/product.controller.js';
 import { SaleController } from './interfaces/controllers/sale.controller.js';
 import { ReportController } from './interfaces/controllers/report.controller.js';
-import { createProductRoutes } from './interfaces/routes/product.routes.js';
-import { createSaleRoutes } from './interfaces/routes/sale.routes.js';
-import { createReportRoutes } from './interfaces/routes/report.routes.js';
 
-export async function createApp(): Promise<Application> {
-  const app = express();
+// Rutas
+import { ProductRoutes } from './interfaces/routes/product.routes.js';
+import { SaleRoutes } from './interfaces/routes/sale.routes.js';
+import { ReportRoutes } from './interfaces/routes/report.routes.js';
 
-  // Middleware
-  app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  // Logger middleware
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-  });
+export class App {
+  private app: Application;
+  private productController!: ProductController;
+  private saleController!: SaleController;
+  private reportController!: ReportController;
 
-  // Inicializar base de datos
-  await getConnection();
+  constructor() {
+    this.app = express();
+    this.initializeMiddlewares();
+  }
 
-  // Inicializar repositorios
-  const productRepository = new SQLiteProductRepository();
-  const saleRepository = new SQLiteSaleRepository();
+  /**
+   * Inicializa middlewares de Express
+   */
+  private initializeMiddlewares(): void {
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+    
+    // Servir archivos estáticos del frontend
+    const frontendPath = path.join(__dirname, '../../frontend');
+    this.app.use(express.static(frontendPath));
+  }
 
-  // Inicializar casos de uso
-  const createSaleUseCase = new CreateSaleUseCase(saleRepository, productRepository);
-  const getSalesReportUseCase = new GetSalesReportUseCase(saleRepository);
-  const exportReportUseCase = new ExportReportUseCase(saleRepository);
+  /**
+   * Inicializa la base de datos y las dependencias
+   */
+  async initialize(): Promise<void> {
+    try {
+      // Inicializar base de datos
+      console.log('📦 Inicializando base de datos...');
+      await getDatabase();
+      console.log('✅ Base de datos inicializada correctamente\n');
 
-  // Inicializar controladores
-  const productController = new ProductController(productRepository);
-  const saleController = new SaleController(createSaleUseCase, saleRepository);
-  const reportController = new ReportController(getSalesReportUseCase, exportReportUseCase);
+      // Inicializar repositorios
+      const productRepository = new ProductRepositoryImpl();
+      const saleRepository = new SaleRepositoryImpl();
 
-  // Rutas
-  app.use('/api/products', createProductRoutes(productController));
-  app.use('/api/sales', createSaleRoutes(saleController));
-  app.use('/api/reports', createReportRoutes(reportController));
+      // Inicializar controladores (ambos necesitan ambos repositorios)
+      this.productController = new ProductController(productRepository);
+      this.saleController = new SaleController(saleRepository, productRepository);
+      this.reportController = new ReportController(saleRepository, productRepository);
 
-  // Ruta raíz
-  app.get('/', (req: Request, res: Response) => {
-    res.json({
-      message: '🏪 API Sistema de Ventas Cafetería',
-      version: '1.0.0',
-      endpoints: {
-        products: '/api/products',
-        sales: '/api/sales',
-        reports: '/api/reports'
-      }
+      // Configurar rutas
+      this.initializeRoutes();
+
+      console.log('✅ Aplicación inicializada correctamente');
+    } catch (error) {
+      console.error('❌ Error al inicializar la aplicación:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Configura las rutas de la API
+   */
+  private initializeRoutes(): void {
+    // Rutas de API
+    this.app.use('/api/products', new ProductRoutes(this.productController).getRouter());
+    this.app.use('/api/sales', new SaleRoutes(this.saleController).getRouter());
+    this.app.use('/api/reports', new ReportRoutes(this.reportController).getRouter());
+
+    // Ruta por defecto - sirve index.html
+    this.app.get('/', (req, res) => {
+      res.sendFile(path.join(__dirname, '../../frontend/index.html'));
     });
-  });
 
-  // Ruta de health check
-  app.get('/health', (req: Request, res: Response) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
-  });
-
-  // Manejo de rutas no encontradas
-  app.use((req: Request, res: Response) => {
-    res.status(404).json({ 
-      error: 'Ruta no encontrada',
-      path: req.path 
+    // Manejo de rutas no encontradas
+    this.app.use((req, res) => {
+      res.status(404).json({ 
+        error: 'Ruta no encontrada',
+        message: `La ruta ${req.path} no existe en esta API`
+      });
     });
-  });
+  }
 
-  // Manejo de errores global
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error('Error:', err);
-    res.status(500).json({ 
-      error: 'Error interno del servidor',
-      message: err.message 
-    });
-  });
+  /**
+   * Obtiene la instancia de Express
+   */
+  getApp(): Application {
+    return this.app;
+  }
 
-  return app;
+  /**
+   * Cierra la conexión a la base de datos
+   */
+  async close(): Promise<void> {
+    await closeDatabase();
+    console.log('🔒 Conexión a la base de datos cerrada');
+  }
 }

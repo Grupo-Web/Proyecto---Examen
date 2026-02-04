@@ -1,156 +1,195 @@
 /**
- * Product Controller - Interfaces Layer
- * Maneja las peticiones HTTP para productos (MANTENEDOR)
+ * Product Controller - Maneja las peticiones HTTP relacionadas con productos
  */
 
 import { Request, Response } from 'express';
 import { ProductRepository } from '../../domain/repositories/product.repository.js';
-import { Product } from '../../domain/entities/product.entity.js';
-import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * Helper para obtener string de req.params
+ */
+function getStringParam(value: string | string[]): string {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export class ProductController {
   constructor(private productRepository: ProductRepository) {}
 
-  // GET /api/products - Listar todos los productos
-  async getAll(req: Request, res: Response): Promise<void> {
+  /**
+   * GET /api/products - Obtener todos los productos
+   */
+  async getAllProducts(req: Request, res: Response): Promise<void> {
     try {
       const products = await this.productRepository.findAll();
       res.json(products);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error al obtener productos:', error);
       res.status(500).json({ 
-        error: 'Error al obtener productos', 
-        message: error.message 
+        error: 'Error al obtener productos',
+        message: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }
 
-  // GET /api/products/:id - Obtener producto por ID
-  async getById(req: Request, res: Response): Promise<void> {
+  /**
+   * GET /api/products/:id - Obtener producto por ID
+   */
+  async getProductById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = getStringParam(req.params.id);
       const product = await this.productRepository.findById(id);
-      
+
       if (!product) {
         res.status(404).json({ error: 'Producto no encontrado' });
         return;
       }
 
       res.json(product);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error al obtener producto:', error);
       res.status(500).json({ 
-        error: 'Error al obtener producto', 
-        message: error.message 
+        error: 'Error al obtener producto',
+        message: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }
 
-  // GET /api/products/category/:category - Obtener productos por categoría
-  async getByCategory(req: Request, res: Response): Promise<void> {
+  /**
+   * POST /api/products - Crear nuevo producto
+   */
+  async createProduct(req: Request, res: Response): Promise<void> {
     try {
-      const { category } = req.params;
-      const products = await this.productRepository.findByCategory(category);
-      res.json(products);
-    } catch (error: any) {
-      res.status(500).json({ 
-        error: 'Error al obtener productos por categoría', 
-        message: error.message 
-      });
-    }
-  }
+      const { name, description, price, category, stock } = req.body;
 
-  // GET /api/products/categories - Obtener categorías únicas
-  async getCategories(req: Request, res: Response): Promise<void> {
-    try {
-      const categories = await this.productRepository.getCategories();
-      res.json(categories);
-    } catch (error: any) {
-      res.status(500).json({ 
-        error: 'Error al obtener categorías', 
-        message: error.message 
-      });
-    }
-  }
-
-  // POST /api/products - Crear nuevo producto
-  async create(req: Request, res: Response): Promise<void> {
-    try {
-      const { name, price, category, stock } = req.body;
-
-      // Validaciones
+      // Validaciones básicas
       if (!name || !price || !category) {
         res.status(400).json({ 
-          error: 'Datos incompletos',
-          message: 'Se requieren: name, price, category' 
+          error: 'Campos requeridos: name, price, category' 
         });
         return;
       }
 
-      const product = new Product(
-        uuidv4(),
+      if (price <= 0) {
+        res.status(400).json({ 
+          error: 'El precio debe ser mayor a 0' 
+        });
+        return;
+      }
+
+      if (stock !== undefined && stock < 0) {
+        res.status(400).json({ 
+          error: 'El stock no puede ser negativo' 
+        });
+        return;
+      }
+
+      const productData = {
         name,
-        parseFloat(price),
+        description: description || '',
+        price: Number(price),
         category,
-        parseInt(stock) || 0
-      );
+        stock: stock !== undefined ? Number(stock) : 0,
+        createdAt: new Date()
+      };
 
-      const saved = await this.productRepository.save(product);
-      res.status(201).json(saved);
-    } catch (error: any) {
-      res.status(400).json({ 
-        error: 'Error al crear producto', 
-        message: error.message 
-      });
-    }
-  }
-
-  // PUT /api/products/:id - Actualizar producto
-  async update(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { name, price, category, stock } = req.body;
-
-      // Verificar que existe
-      const existing = await this.productRepository.findById(id);
-      if (!existing) {
-        res.status(404).json({ error: 'Producto no encontrado' });
-        return;
-      }
-
-      // Actualizar
-      existing.update({
-        name: name || existing.name,
-        price: price !== undefined ? parseFloat(price) : existing.price,
-        category: category || existing.category,
-        stock: stock !== undefined ? parseInt(stock) : existing.stock
-      });
-
-      const updated = await this.productRepository.update(id, existing);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ 
-        error: 'Error al actualizar producto', 
-        message: error.message 
-      });
-    }
-  }
-
-  // DELETE /api/products/:id - Eliminar producto
-  async delete(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      const exists = await this.productRepository.exists(id);
-      if (!exists) {
-        res.status(404).json({ error: 'Producto no encontrado' });
-        return;
-      }
-
-      await this.productRepository.delete(id);
-      res.json({ message: 'Producto eliminado correctamente' });
-    } catch (error: any) {
+      const product = await this.productRepository.save(productData);
+      res.status(201).json(product);
+    } catch (error) {
+      console.error('Error al crear producto:', error);
       res.status(500).json({ 
-        error: 'Error al eliminar producto', 
-        message: error.message 
+        error: 'Error al crear producto',
+        message: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
+  /**
+   * PUT /api/products/:id - Actualizar producto
+   */
+  async updateProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const id = getStringParam(req.params.id);
+      const { name, description, price, category, stock } = req.body;
+
+      // Verificar que el producto existe
+      const existingProduct = await this.productRepository.findById(id);
+      if (!existingProduct) {
+        res.status(404).json({ error: 'Producto no encontrado' });
+        return;
+      }
+
+      // Validaciones
+      if (price !== undefined && price <= 0) {
+        res.status(400).json({ 
+          error: 'El precio debe ser mayor a 0' 
+        });
+        return;
+      }
+
+      if (stock !== undefined && stock < 0) {
+        res.status(400).json({ 
+          error: 'El stock no puede ser negativo' 
+        });
+        return;
+      }
+
+      // Crear objeto con datos actualizados
+      const updatedData = {
+        name: name !== undefined ? name : existingProduct.name,
+        description: description !== undefined ? description : existingProduct.description,
+        price: price !== undefined ? Number(price) : existingProduct.price,
+        category: category !== undefined ? category : existingProduct.category,
+        stock: stock !== undefined ? Number(stock) : existingProduct.stock,
+        createdAt: existingProduct.createdAt
+      };
+
+      const product = await this.productRepository.update(id, updatedData);
+      res.json(product);
+    } catch (error) {
+      console.error('Error al actualizar producto:', error);
+      res.status(500).json({ 
+        error: 'Error al actualizar producto',
+        message: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/products/:id - Eliminar producto
+   */
+  async deleteProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const id = getStringParam(req.params.id);
+      const deleted = await this.productRepository.delete(id);
+
+      if (!deleted) {
+        res.status(404).json({ error: 'Producto no encontrado' });
+        return;
+      }
+
+      res.json({ message: 'Producto eliminado correctamente' });
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+      res.status(500).json({ 
+        error: 'Error al eliminar producto',
+        message: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
+  /**
+   * GET /api/products/category/:category - Obtener productos por categoría
+   */
+  async getProductsByCategory(req: Request, res: Response): Promise<void> {
+    try {
+      const category = getStringParam(req.params.category);
+      const products = await this.productRepository.findByCategory(category);
+      res.json(products);
+    } catch (error) {
+      console.error('Error al obtener productos por categoría:', error);
+      res.status(500).json({ 
+        error: 'Error al obtener productos',
+        message: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }

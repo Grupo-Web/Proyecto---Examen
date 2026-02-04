@@ -1,30 +1,25 @@
 /**
  * SaleItem Entity - Domain Layer
- * Representa un item individual dentro de una venta
+ * Entidad de dominio para items de venta
  */
 
 export class SaleItem {
-  public readonly subtotal: number;
-
   constructor(
-    public readonly productId: string,
-    public readonly productName: string,
-    public readonly quantity: number,
-    public readonly price: number
+    public id: string,
+    public saleId: string,
+    public productId: string,
+    public productName: string,
+    public quantity: number,
+    public price: number,
+    public subtotal: number
   ) {
     this.validate();
-    this.subtotal = this.calculateSubtotal();
   }
 
+  /**
+   * Valida los datos del item de venta
+   */
   private validate(): void {
-    if (!this.productId || this.productId.trim().length === 0) {
-      throw new Error('El ID del producto es requerido');
-    }
-
-    if (!this.productName || this.productName.trim().length === 0) {
-      throw new Error('El nombre del producto es requerido');
-    }
-
     if (this.quantity <= 0) {
       throw new Error('La cantidad debe ser mayor a 0');
     }
@@ -32,15 +27,32 @@ export class SaleItem {
     if (this.price <= 0) {
       throw new Error('El precio debe ser mayor a 0');
     }
+
+    if (this.subtotal <= 0) {
+      throw new Error('El subtotal debe ser mayor a 0');
+    }
+
+    // Verificar que el subtotal sea correcto
+    const calculatedSubtotal = this.quantity * this.price;
+    if (Math.abs(calculatedSubtotal - this.subtotal) > 0.01) {
+      throw new Error('El subtotal no coincide con cantidad x precio');
+    }
   }
 
-  private calculateSubtotal(): number {
-    return this.quantity * this.price;
+  /**
+   * Calcula el subtotal
+   */
+  public static calculateSubtotal(quantity: number, price: number): number {
+    return quantity * price;
   }
 
-  // Convertir a objeto plano para DB
-  toJSON() {
+  /**
+   * Convierte el item a JSON
+   */
+  public toJSON(): Record<string, any> {
     return {
+      id: this.id,
+      saleId: this.saleId,
       productId: this.productId,
       productName: this.productName,
       quantity: this.quantity,
@@ -49,13 +61,18 @@ export class SaleItem {
     };
   }
 
-  // Crear desde objeto plano
-  static fromJSON(data: any): SaleItem {
+  /**
+   * Crea un item de venta desde JSON
+   */
+  public static fromJSON(data: any): SaleItem {
     return new SaleItem(
-      data.productId,
-      data.productName,
+      data.id,
+      data.saleId || data.sale_id,
+      data.productId || data.product_id,
+      data.productName || data.product_name,
       data.quantity,
-      data.price
+      data.price || data.unit_price,
+      data.subtotal
     );
   }
 }

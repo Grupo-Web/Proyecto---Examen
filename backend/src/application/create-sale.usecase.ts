@@ -1,21 +1,15 @@
 /**
- * Create Sale Use Case - Application Layer
- * Caso de uso para registrar una nueva venta
+ * Create Sale Use Case - Lógica de negocio para crear una venta
  */
 
-import { Sale } from '../domain/entities/sale.entity.js';
-import { SaleItem } from '../domain/entities/sale-item.entity.js';
-import { SaleRepository } from '../domain/repositories/sale.repository.js';
+import { SaleRepository, SaleItemData, SaleData } from '../domain/repositories/sale.repository.js';
 import { ProductRepository } from '../domain/repositories/product.repository.js';
-import { NotFoundError, InsufficientStockError } from '../domain/errors/domain.error.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface CreateSaleDTO {
-  items: Array<{
+  items: {
     productId: string;
     quantity: number;
-  }>;
-  customerName?: string;
+  }[];
 }
 
 export class CreateSaleUseCase {
@@ -24,52 +18,68 @@ export class CreateSaleUseCase {
     private productRepository: ProductRepository
   ) {}
 
-  async execute(dto: CreateSaleDTO): Promise<Sale> {
+  async execute(dto: CreateSaleDTO): Promise<SaleData> {
     // Validar que hay items
     if (!dto.items || dto.items.length === 0) {
-      throw new Error('Debe agregar al menos un producto a la venta');
+      throw new Error('La venta debe tener al menos un producto');
     }
 
-    // Crear items de venta con validaciones
-    const saleItems: SaleItem[] = [];
+    // Validar y calcular el total
+    let total = 0;
+    const saleItems: SaleItemData[] = [];
 
     for (const item of dto.items) {
-      // Buscar producto
+      // Validar cantidad
+      if (item.quantity <= 0) {
+        throw new Error('La cantidad debe ser mayor a 0');
+      }
+
+      // Obtener producto
       const product = await this.productRepository.findById(item.productId);
-      
       if (!product) {
-        throw new NotFoundError('Producto', item.productId);
+        throw new Error(`Producto con ID ${item.productId} no encontrado`);
       }
 
       // Verificar stock
       if (product.stock < item.quantity) {
-        throw new InsufficientStockError(
-          product.name,
-          product.stock,
-          item.quantity
+        throw new Error(
+          `Stock insuficiente para ${product.name}. ` +
+          `Disponible: ${product.stock}, Solicitado: ${item.quantity}`
         );
       }
 
-      // Crear item de venta
-      const saleItem = new SaleItem(
-        product.id,
-        product.name,
-        item.quantity,
-        product.price
-      );
+      // Calcular subtotal
+      const subtotal = product.price * item.quantity;
+      total += subtotal;
 
-      saleItems.push(saleItem);
+      // Agregar item
+      saleItems.push({
+        productId: product.id!,
+        productName: product.name,
+        quantity: item.quantity,
+        price: product.price,
+        subtotal
+      });
     }
 
     // Crear la venta
-    const sale = new Sale(
-      uuidv4(),
-      saleItems,
-      new Date(),
-      dto.customerName
-    );
+    const sale = await this.saleRepository.save({
+      date: new Date(),
+      total,
+      items: saleItems
+    });
 
-    // Guardar en el repositorio (esto también actualiza el stock)
-    return await this.saleRepository.save(sale);
+    // Actualizar stock de productos
+    for (const item of dto.items) {
+      const product = await this.productRepository.findById(item.productId);
+      if (product) {
+        await this.productRepository.update(item.productId, {
+          ...product,
+          stock: product.stock - item.quantity
+        });
+      }
+    }
+
+    return sale;
   }
 }
