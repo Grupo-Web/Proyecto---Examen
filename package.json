@@ -1,48 +1,37 @@
 {
   "name": "proyecto---examen",
   "version": "1.0.0",
-  "description": "Backend del sistema web para el registro y análisis de ventas de una cafetería",
+  "description": "Sistema web de análisis de ventas de una cafetería",
   "type": "module",
-  "main": "dist/app.js",
-
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon backend/src/app.ts",
+    "dev": "tsx backend/src/server.ts",
     "build": "tsc",
-    "start": "node dist/app.js",
-
-    "setup": "powershell -File .\\setup-directories.ps1",
-    "verify": "powershell -File .\\verify-structure.ps1",
-
-    "test:category": "npx ts-node-esm backend/src/tests/test-category.ts",
-    "test:product": "npx ts-node-esm backend/src/tests/test-product.ts",
-    "test:sale": "npx ts-node-esm backend/src/tests/test-sale.ts",
-    "test:saleitem": "npx ts-node-esm backend/src/tests/test-saleitem.ts"
+    "start": "node dist/server.js",
+    "seed": "tsx backend/src/infrastructure/database/seed.ts"
   },
-
   "keywords": [
     "nodejs",
     "typescript",
     "hexagonal-architecture",
-    "ddd",
     "cafeteria",
-    "sales",
-    "data-analysis"
+    "sales"
   ],
-
-  "author": "",
+  "author": "Grupo 6 - Universidad de Guayaquil",
   "license": "ISC",
-
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1",
-    "cors": "^2.8.6"
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0"
   },
-
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "ts-node": "^10.9.2",
-    "nodemon": "^3.1.11",
-    "@types/node": "^25.2.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/cors": "^2.8.19"
+    "@types/node": "^25.2.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
