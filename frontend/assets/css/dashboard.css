@@ -1,62 +1,332 @@
+/* ========================================
+   VARIABLES Y ESTILOS GENERALES
+   ======================================== */
+
+:root {
+  --primary-color: #0d6efd;
+  --success-color: #198754;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #0dcaf0;
+  --dark-color: #212529;
+  --light-color: #f8f9fa;
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --card-hover-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background:#f5f7fa;
-  padding:20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+  color: #333;
 }
 
-h1 {
-  text-align:center;
+/* ========================================
+   NAVBAR
+   ======================================== */
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.filters {
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-  margin-bottom:15px;
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 
-.filters input, .filters button {
-  padding:6px;
+.navbar-brand i {
+  margin-right: 8px;
 }
 
-.simulator-box {
-  background:#ffffff;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
+/* ========================================
+   TARJETAS DE ESTADÍSTICAS (KPIs)
+   ======================================== */
+
+.stat-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+  height: 100%;
 }
 
-.simulator-box button {
-  background:#2196F3;
-  color:white;
-  border:none;
-  padding:6px 14px;
-  border-radius:6px;
-  cursor:pointer;
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-hover-shadow);
 }
 
-#simStatus {
-  font-size:14px;
-  color:green;
+.stat-card .card-body {
+  padding: 1.5rem;
 }
 
-.charts {
-  display:flex;
-  gap:20px;
-  flex-wrap:wrap;
+.card-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.chart-box {
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  width:400px;
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.stat-card-revenue {
+  border-left: 4px solid var(--primary-color);
+}
+
+.stat-card-sales {
+  border-left: 4px solid var(--success-color);
+}
+
+.stat-card-average {
+  border-left: 4px solid var(--warning-color);
+}
+
+.stat-card-products {
+  border-left: 4px solid var(--info-color);
+}
+
+/* ========================================
+   TARJETAS DE GRÁFICOS
+   ======================================== */
+
+.chart-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  height: 100%;
+}
+
+.chart-card .card-header {
+  border-bottom: 2px solid #f0f0f0;
+  padding: 1rem 1.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+.chart-card .card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dark-color);
+}
+
+.chart-card .card-body {
+  padding: 1.5rem;
+}
+
+/* ========================================
+   TABLAS
+   ======================================== */
+
+.table {
+  margin-bottom: 0;
+}
+
+.table thead {
+  background-color: #f8f9fa;
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+/* Sticky header para tablas scrollables */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ========================================
+   FILTROS Y CONTROLES
+   ======================================== */
+
+.form-select,
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+}
+
+/* ========================================
+   LOADING OVERLAY
+   ======================================== */
+
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#loadingOverlay .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ========================================
+   BADGES Y ETIQUETAS
+   ======================================== */
+
+.badge {
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .card-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+
+  .chart-card .card-body {
+    padding: 1rem;
+  }
+
+  h1.h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========================================
+   UTILIDADES PERSONALIZADAS
+   ======================================== */
+
+.text-muted {
+  font-size: 0.85rem;
+}
+
+.card {
+  border: none;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Colores para las métricas de cambio */
+.text-success {
+  color: #198754 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+/* ========================================
+   TOOLTIPS Y ELEMENTOS INTERACTIVOS
+   ======================================== */
+
+[data-bs-toggle="tooltip"] {
+  cursor: help;
+}
+
+/* ========================================
+   MEJORAS VISUALES PARA CANVAS
+   ======================================== */
+
+canvas {
+  max-height: 400px;
 }
