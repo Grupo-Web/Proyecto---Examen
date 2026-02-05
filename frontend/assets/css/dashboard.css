@@ -1,0 +1,62 @@
+body {
+  font-family: Arial, sans-serif;
+  background:#f5f7fa;
+  padding:20px;
+}
+
+h1 {
+  text-align:center;
+}
+
+.filters {
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+.filters input, .filters button {
+  padding:6px;
+}
+
+.simulator-box {
+  background:#ffffff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.simulator-box button {
+  background:#2196F3;
+  color:white;
+  border:none;
+  padding:6px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+#simStatus {
+  font-size:14px;
+  color:green;
+}
+
+.charts {
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.chart-box {
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  width:400px;
+}
