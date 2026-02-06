@@ -13,6 +13,7 @@ export class ProductRepositoryImpl implements ProductRepository {
     const db = await getDatabase();
     
     const id = uuidv4();
+    const now = new Date().toISOString();
     const productData = {
       id,
       name: product.name,
@@ -20,14 +21,15 @@ export class ProductRepositoryImpl implements ProductRepository {
       price: product.price,
       category: product.category,
       stock: product.stock,
-      created_at: product.createdAt.toISOString()
+      created_at: now,
+      updated_at: now
     };
 
     await db.run(
-      `INSERT INTO products (id, name, description, price, category, stock, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO products (id, name, description, price, category, stock, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [productData.id, productData.name, productData.description, productData.price, 
-       productData.category, productData.stock, productData.created_at]
+       productData.category, productData.stock, productData.created_at, productData.updated_at]
     );
 
     return {
@@ -93,12 +95,13 @@ export class ProductRepositoryImpl implements ProductRepository {
 
   async update(id: string, product: Omit<ProductData, 'id'>): Promise<ProductData> {
     const db = await getDatabase();
+    const now = new Date().toISOString();
     
     await db.run(
       `UPDATE products 
-       SET name = ?, description = ?, price = ?, category = ?, stock = ?
+       SET name = ?, description = ?, price = ?, category = ?, stock = ?, updated_at = ?
        WHERE id = ?`,
-      [product.name, product.description, product.price, product.category, product.stock, id]
+      [product.name, product.description, product.price, product.category, product.stock, now, id]
     );
 
     const updated = await this.findById(id);

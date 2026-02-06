@@ -65,6 +65,10 @@ async function createTables(): Promise<void> {
       name TEXT NOT NULL,
       description TEXT,
       price REAL NOT NULL,
+<<<<<<< Updated upstream
+=======
+      category TEXT NOT NULL,
+>>>>>>> Stashed changes
       stock INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL

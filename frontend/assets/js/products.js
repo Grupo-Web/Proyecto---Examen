@@ -1,3 +1,8 @@
+// ============================================
+// ARCHIVO: frontend/assets/js/products.js
+// DESCRIPCIÓN: Lógica del mantenedor de productos
+// ============================================
+
 // Referencias a elementos del DOM
 const productForm = document.getElementById('product-form');
 const productsBody = document.getElementById('products-body');
@@ -6,30 +11,48 @@ const btnCancel = document.getElementById('btn-cancel');
 
 // Variables de estado
 let isEditing = false;
+let currentProductId = null;
 
 // 1. Función para LISTAR (Obtener productos de la API)
 const loadProducts = async () => {
     try {
-        // Aquí usamos el objeto 'api' que debería estar definido en api.js
-        const products = await api.get('/products'); 
-        renderTable(products);
+        console.log('📥 Cargando productos...');
+        const result = await API.products.getAll();
+        
+        if (!result.success) {
+            console.error('Error en respuesta:', result.error);
+            alert('Error al cargar productos: ' + result.error);
+            return;
+        }
+        
+        console.log('✅ Productos obtenidos:', result.data);
+        renderTable(result.data);
     } catch (error) {
         console.error("Error al cargar productos:", error);
+        alert("Error al cargar productos: " + error.message);
     }
 };
 
 // 2. Función para RENDERIZAR la tabla
 const renderTable = (products) => {
     productsBody.innerHTML = ''; // Limpiar tabla
+    
+    if (!products || products.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="5" style="text-align:center;">No hay productos</td>';
+        productsBody.appendChild(row);
+        return;
+    }
+    
     products.forEach(product => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${product.id}</td>
             <td>${product.name}</td>
-            <td>$${product.price}</td>
+            <td>$${product.price.toFixed(2)}</td>
             <td>${product.stock}</td>
             <td>
-                <button onclick="prepareEdit('${product.id}', '${product.name}', ${product.price}, ${product.stock})">Editar</button>
+                <button onclick="prepareEdit('${product.id}', '${product.name}', '${product.description}', '${product.category}', ${product.price}, ${product.stock})">Editar</button>
                 <button onclick="deleteProduct('${product.id}')">Eliminar</button>
             </td>
         `;
@@ -42,61 +65,116 @@ productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const productData = {
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value, // NUEVO
-        category: document.getElementById('category').value,       // NUEVO
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        category: document.getElementById('category').value,
         price: parseFloat(document.getElementById('price').value),
         stock: parseInt(document.getElementById('stock').value),
-        createdAt: new Date() // El repositorio pide una fecha
+        createdAt: new Date()
     };
 
-    const id = document.getElementById('product-id').value;
+    // Validaciones básicas
+    if (!productData.name) {
+        alert('El nombre es obligatorio');
+        return;
+    }
+
+    if (productData.price <= 0) {
+        alert('El precio debe ser mayor a 0');
+        return;
+    }
+
+    if (productData.stock < 0) {
+        alert('El stock no puede ser negativo');
+        return;
+    }
 
     try {
-        if (isEditing) {
-            await api.put(`/products/${id}`, productData);
-            alert("Producto actualizado");
+        if (isEditing && currentProductId) {
+            console.log('📝 Actualizando producto:', currentProductId);
+            const result = await API.products.update(currentProductId, productData);
+            
+            if (result.success) {
+                alert("✅ Producto actualizado correctamente");
+            } else {
+                alert("❌ Error al actualizar: " + result.error);
+                return;
+            }
         } else {
-            await api.post('/products', productData);
-            alert("Producto creado");
+            console.log('➕ Creando nuevo producto');
+            const result = await API.products.create(productData);
+            
+            if (result.success) {
+                alert("✅ Producto creado correctamente");
+            } else {
+                alert("❌ Error al crear: " + result.error);
+                return;
+            }
         }
+        
         resetForm();
         loadProducts();
     } catch (error) {
-        alert("Error al procesar la solicitud");
+        console.error('Error:', error);
+        alert("❌ Error al procesar la solicitud: " + error.message);
     }
 });
 
 // 4. Función para ELIMINAR
 const deleteProduct = async (id) => {
-    if (confirm("¿Estás seguro de eliminar este producto?")) {
-        await api.delete(`/products/${id}`);
-        loadProducts();
+    if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+        try {
+            console.log('🗑️  Eliminando producto:', id);
+            const result = await API.products.delete(id);
+            
+            if (result.success) {
+                alert("✅ Producto eliminado correctamente");
+                loadProducts();
+            } else {
+                alert("❌ Error al eliminar: " + result.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("❌ Error al eliminar: " + error.message);
+        }
     }
 };
 
 // 5. Preparar el formulario para EDITAR
-window.prepareEdit = (id, name, price, stock) => {
+window.prepareEdit = (id, name, description, category, price, stock) => {
     isEditing = true;
+    currentProductId = id;
     document.getElementById('product-id').value = id;
     document.getElementById('name').value = name;
+    document.getElementById('description').value = description;
+    document.getElementById('category').value = category;
     document.getElementById('price').value = price;
     document.getElementById('stock').value = stock;
     
+    document.getElementById('form-title').textContent = 'Editar Producto';
     btnSave.textContent = "Actualizar Producto";
-    btnCancel.style.display = "inline";
+    btnCancel.style.display = "inline-block";
+    
+    // Scroll al formulario
+    document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
 };
 
 // 6. Resetear formulario
 const resetForm = () => {
     isEditing = false;
+    currentProductId = null;
     productForm.reset();
     document.getElementById('product-id').value = '';
+    document.getElementById('form-title').textContent = 'Agregar Nuevo Producto';
     btnSave.textContent = "Guardar Producto";
     btnCancel.style.display = "none";
 };
 
+// Event listeners
 btnCancel.addEventListener('click', resetForm);
 
 // Cargar datos al iniciar la página
-document.addEventListener('DOMContentLoaded', loadProducts);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Página de productos inicializada');
+    loadProducts();
+});
