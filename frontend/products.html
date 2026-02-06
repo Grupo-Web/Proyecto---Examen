@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenedor de Productos - Cafetería</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Gestión de Productos</h1>
+        <nav>
+            <a href="index.html">Inicio</a> | 
+            <a href="sales.html">Ventas (Proceso)</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="form-section">
+            <h2 id="form-title">Agregar Nuevo Producto</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+
+                <div class="form-group">
+                    <label for="name">Nombre:</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descripción:</label>
+                    <input type="text" id="description" required placeholder="Ej: Café con granos de altura">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Categoría:</label>
+                    <select id="category" required>
+                        <option value="Café">Café</option>
+                        <option value="Bollería">Bollería</option>
+                        <option value="Bebidas Frías">Bebidas Frías</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Precio:</label>
+                    <input type="number" id="price" required step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="stock">Stock:</label>
+                    <input type="number" id="stock" required>
+                </div>
+
+                <button type="submit" id="btn-save">Guardar Producto</button>
+                <button type="button" id="btn-cancel" style="display:none;">Cancelar Edición</button>
+            </form>
+        </section>
+
+        <hr>
+
+        <section id="list-section">
+            <h2>Inventario Actual</h2>
+            <table border="1" id="products-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="products-body">
+                    </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="assets/js/api.js"></script> <script src="assets/js/products.js"></script>
+</body>
+</html>
