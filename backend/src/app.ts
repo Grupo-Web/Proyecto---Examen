@@ -14,7 +14,7 @@ import { ProductRepositoryImpl } from './infrastructure/repositories/product.rep
 import { SaleRepositoryImpl } from './infrastructure/repositories/sale.repository.impl.js';
 
 // Controladores
-import { ProductController } from './interfaces/controllers/product.controller.js';
+// NOTA: Ya no importamos ProductController porque ProductRoutes lo maneja internamente
 import { SaleController } from './interfaces/controllers/sale.controller.js';
 import { ReportController } from './interfaces/controllers/report.controller.js';
 
@@ -28,7 +28,7 @@ const __dirname = path.dirname(__filename);
 
 export class App {
   private app: Application;
-  private productController!: ProductController;
+  // private productController!: ProductController; // ELIMINADO: Ya no lo gestiona App
   private saleController!: SaleController;
   private reportController!: ReportController;
 
@@ -61,11 +61,15 @@ export class App {
       console.log('✅ Base de datos inicializada correctamente\n');
 
       // Inicializar repositorios
+      // MANTENEMOS ESTO: Aunque ProductRoutes crea su propio repositorio internamente,
+      // SaleController y ReportController TODAVÍA necesitan acceder a la tabla de productos.
       const productRepository = new ProductRepositoryImpl();
       const saleRepository = new SaleRepositoryImpl();
 
-      // Inicializar controladores (ambos necesitan ambos repositorios)
-      this.productController = new ProductController(productRepository);
+      // Inicializar controladores
+      // ELIMINADO: this.productController = new ProductController(...) -> Lo hace ProductRoutes
+      
+      // Ventas y Reportes siguen usando la inyección manual (como estaba antes)
       this.saleController = new SaleController(saleRepository, productRepository);
       this.reportController = new ReportController(saleRepository, productRepository);
 
@@ -84,7 +88,12 @@ export class App {
    */
   private initializeRoutes(): void {
     // Rutas de API
-    this.app.use('/api/products', new ProductRoutes(this.productController).getRouter());
+    
+    // CAMBIO IMPORTANTE: Instanciamos ProductRoutes sin argumentos ()
+    // Ahora ProductRoutes se encarga de crear su propio controlador y casos de uso.
+    this.app.use('/api/products', new ProductRoutes().getRouter());
+
+    // Las rutas de ventas y reportes siguen igual
     this.app.use('/api/sales', new SaleRoutes(this.saleController).getRouter());
     this.app.use('/api/reports', new ReportRoutes(this.reportController).getRouter());
 
