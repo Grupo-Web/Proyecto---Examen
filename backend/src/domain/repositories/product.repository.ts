@@ -17,6 +17,5 @@ export interface ProductRepository {
   findAll(): Promise<ProductData[]>;
   findById(id: string): Promise<ProductData | null>;
   findByCategory(category: string): Promise<ProductData[]>;
-  update(id: string, product: Omit<ProductData, 'id'>): Promise<ProductData>;
   delete(id: string): Promise<boolean>;
 }

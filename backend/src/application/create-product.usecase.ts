@@ -44,7 +44,7 @@ export class CreateProductUseCase {
       price: Number(dto.price),           // Aseguramos que sea número
       category: dto.category,
       stock: Number(dto.stock),           // Aseguramos que sea número
-      createdAt: new Date()               // Generamos la fecha actual
+      createdAt: new Date()            // Generamos la fecha actual
     };
 
     // 3. Guardar en la base de datos usando el repositorio
