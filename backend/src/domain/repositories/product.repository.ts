@@ -1,6 +1,3 @@
-/**
- * Product Repository Interface - Define el contrato para persistencia de productos
- */
 
 export interface ProductData {
   id?: string;

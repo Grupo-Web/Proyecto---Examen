@@ -1,8 +1,3 @@
-/**
- * SaleItem Entity - Domain Layer
- * Entidad de dominio para items de venta
- */
-
 export class SaleItem {
   constructor(
     public id: string,
@@ -16,9 +11,6 @@ export class SaleItem {
     this.validate();
   }
 
-  /**
-   * Valida los datos del item de venta
-   */
   private validate(): void {
     if (this.quantity <= 0) {
       throw new Error('La cantidad debe ser mayor a 0');
@@ -32,23 +24,16 @@ export class SaleItem {
       throw new Error('El subtotal debe ser mayor a 0');
     }
 
-    // Verificar que el subtotal sea correcto
     const calculatedSubtotal = this.quantity * this.price;
     if (Math.abs(calculatedSubtotal - this.subtotal) > 0.01) {
       throw new Error('El subtotal no coincide con cantidad x precio');
     }
   }
 
-  /**
-   * Calcula el subtotal
-   */
   public static calculateSubtotal(quantity: number, price: number): number {
     return quantity * price;
   }
 
-  /**
-   * Convierte el item a JSON
-   */
   public toJSON(): Record<string, any> {
     return {
       id: this.id,
@@ -61,9 +46,6 @@ export class SaleItem {
     };
   }
 
-  /**
-   * Crea un item de venta desde JSON
-   */
   public static fromJSON(data: any): SaleItem {
     return new SaleItem(
       data.id,

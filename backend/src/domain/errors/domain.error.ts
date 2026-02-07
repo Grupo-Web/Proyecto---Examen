@@ -1,7 +1,3 @@
-/**
- * Domain Error - Domain Layer
- * Errores personalizados del dominio
- */
 
 export class DomainError extends Error {
   constructor(message: string) {

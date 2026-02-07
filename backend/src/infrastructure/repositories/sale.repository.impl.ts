@@ -1,8 +1,3 @@
-/**
- * Sale Repository Implementation - Infrastructure Layer
- * Implementación de persistencia de ventas con SQLite
- */
-
 import { SaleRepository } from '../../domain/repositories/sale.repository.js';
 import { Sale } from '../../domain/entities/sale.entity.js';
 import { SaleItem } from '../../domain/entities/sale-item.entity.js';

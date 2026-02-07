@@ -1,14 +1,8 @@
-/**
- * Report Controller - Maneja reportes y estadísticas de ventas
- */
 
 import { Request, Response } from 'express';
 import { SaleRepository } from '../../domain/repositories/sale.repository.js';
 import { ProductRepository } from '../../domain/repositories/product.repository.js';
 
-/**
- * Helper para obtener string de req.query
- */
 function getStringParam(value: string | string[] | undefined): string | undefined {
   if (!value) return undefined;
   return Array.isArray(value) ? value[0] : value;
@@ -20,9 +14,6 @@ export class ReportController {
     private productRepository: ProductRepository
   ) {}
 
-  /**
-   * GET /api/reports/sales - Obtener reporte general de ventas
-   */
   async getSalesReport(req: Request, res: Response): Promise<void> {
     try {
       const startDateParam = getStringParam(req.query.startDate as string | string[] | undefined);
@@ -63,9 +54,6 @@ export class ReportController {
     }
   }
 
-  /**
-   * GET /api/reports/top-products - Obtener productos más vendidos
-   */
   async getTopProducts(req: Request, res: Response): Promise<void> {
     try {
       const limitParam = getStringParam(req.query.limit as string | string[] | undefined);
@@ -87,14 +75,10 @@ export class ReportController {
     }
   }
 
-  /**
-   * GET /api/reports/export - Exportar reporte en formato CSV
-   */
   async exportReport(req: Request, res: Response): Promise<void> {
     try {
       const sales = await this.saleRepository.findAll();
 
-      // Generar CSV
       const csvHeader = 'ID,Fecha,Total,Productos\n';
       const csvRows = sales.map(sale => {
         const products = sale.items.map(item => 

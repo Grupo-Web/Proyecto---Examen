@@ -1,19 +1,14 @@
-// dashboard.js — Consume datos reales del backend
 const API_URL = 'http://localhost:3000/api';
 
-// Variable para evitar múltiples cargas simultáneas
 let isLoading = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Prevenir múltiples ejecuciones
     if (isLoading) return;
     isLoading = true;
 
     try {
-        // Mostrar indicador de carga
         showLoading();
 
-        // Obtener datos del backend con timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
 
@@ -29,28 +24,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const salesData = await salesResponse.json();
 
-        // Validar que salesData sea un array
         if (!Array.isArray(salesData)) {
             throw new Error('Los datos recibidos no son válidos');
         }
 
-        // Procesar datos
         const stats = calculateStatistics(salesData);
         const weeklyData = getWeeklyData(salesData);
         const productDistribution = getProductDistribution(salesData);
         const recentSales = getRecentSales(salesData);
 
-        // Actualizar tarjetas resumen
         updateSummaryCards(stats);
 
-        // Renderizar gráficas
         renderLineChart(weeklyData);
         renderDonutChart(productDistribution);
 
-        // Llenar tabla de ventas recientes
         fillRecentSalesTable(recentSales);
 
-        // Ocultar indicador de carga
         hideLoading();
 
     } catch (error) {
@@ -67,9 +56,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-/**
- * Calcula estadísticas generales de las ventas
- */
 function calculateStatistics(sales) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -84,7 +70,6 @@ function calculateStatistics(sales) {
         })
         .reduce((sum, sale) => sum + sale.total, 0);
 
-    // Contar productos vendidos
     const productCounts = {};
     sales.forEach(sale => {
         sale.items.forEach(item => {
@@ -102,15 +87,11 @@ function calculateStatistics(sales) {
     };
 }
 
-/**
- * Obtiene datos de ventas de la última semana
- */
 function getWeeklyData(sales) {
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const today = new Date();
     const weekData = {};
 
-    // Inicializar últimos 7 días
     for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
@@ -119,7 +100,6 @@ function getWeeklyData(sales) {
         weekData[dayName] = { date: date.getTime(), total: 0 };
     }
 
-    // Sumar ventas por día
     sales.forEach(sale => {
         const saleDate = new Date(sale.date);
         saleDate.setHours(0, 0, 0, 0);
@@ -136,9 +116,6 @@ function getWeeklyData(sales) {
     };
 }
 
-/**
- * Obtiene distribución de ventas por producto
- */
 function getProductDistribution(sales) {
     const productData = {};
 
@@ -155,7 +132,6 @@ function getProductDistribution(sales) {
         });
     });
 
-    // Ordenar por cantidad y tomar top 5
     const sorted = Object.entries(productData)
         .sort((a, b) => b[1].quantity - a[1].quantity)
         .slice(0, 5);
@@ -166,11 +142,7 @@ function getProductDistribution(sales) {
     };
 }
 
-/**
- * Obtiene las ventas más recientes
- */
 function getRecentSales(sales) {
-    // Ordenar por fecha descendente y tomar las últimas 10
     return sales
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 10)
@@ -185,18 +157,12 @@ function getRecentSales(sales) {
         });
 }
 
-/**
- * Actualiza las tarjetas de resumen
- */
 function updateSummaryCards(stats) {
     document.getElementById('total-sales').textContent = `$${stats.totalSales.toFixed(2)}`;
     document.getElementById('today-sales').textContent = `$${stats.todaySales.toFixed(2)}`;
     document.getElementById('top-product').textContent = stats.topProduct;
 }
 
-/**
- * Renderiza gráfica de línea de ventas semanales
- */
 function renderLineChart(weeklyData) {
     const ctxLine = document.getElementById('salesLineChart').getContext('2d');
     const coffeeColor = getComputedStyle(document.documentElement)
@@ -246,15 +212,11 @@ function renderLineChart(weeklyData) {
     });
 }
 
-/**
- * Renderiza gráfica donut de distribución por producto
- */
 function renderDonutChart(productDistribution) {
     const ctxDonut = document.getElementById('productDonutChart').getContext('2d');
     const coffeeLight = getComputedStyle(document.documentElement)
         .getPropertyValue('--coffee-light').trim() || '#a67c52';
 
-    // Generar colores basados en el color principal
     const colors = [
         coffeeLight,
         '#c6936b',
@@ -300,12 +262,9 @@ function renderDonutChart(productDistribution) {
     });
 }
 
-/**
- * Llena la tabla de ventas recientes
- */
 function fillRecentSalesTable(recentSales) {
     const tbody = document.querySelector('#recent-sales-table tbody');
-    tbody.innerHTML = ''; // Limpiar contenido previo
+    tbody.innerHTML = ''; 
 
     if (recentSales.length === 0) {
         const tr = document.createElement('tr');
@@ -326,9 +285,6 @@ function fillRecentSalesTable(recentSales) {
     });
 }
 
-/**
- * Muestra indicador de carga
- */
 function showLoading() {
     const cards = document.querySelectorAll('.card-value');
     cards.forEach(card => {
@@ -337,9 +293,6 @@ function showLoading() {
     });
 }
 
-/**
- * Oculta indicador de carga
- */
 function hideLoading() {
     const cards = document.querySelectorAll('.card-value');
     cards.forEach(card => {
@@ -347,11 +300,7 @@ function hideLoading() {
     });
 }
 
-/**
- * Muestra mensaje de error
- */
 function showError(message) {
-    // Remover error previo si existe
     const existingError = document.querySelector('.error-message');
     if (existingError) {
         existingError.remove();
@@ -364,7 +313,6 @@ function showError(message) {
     errorDiv.textContent = message;
     container.insertBefore(errorDiv, container.firstChild);
     
-    // Actualizar cards con mensaje de error
     document.getElementById('total-sales').textContent = '-';
     document.getElementById('today-sales').textContent = '-';
     document.getElementById('top-product').textContent = '-';

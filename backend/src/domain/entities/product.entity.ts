@@ -1,7 +1,3 @@
-/**
- * Product Entity - Domain Layer
- * Entidad de dominio para productos de la cafetería
- */
 
 export class Product {
   constructor(
@@ -16,9 +12,6 @@ export class Product {
     this.validate();
   }
 
-  /**
-   * Valida los datos del producto
-   */
   private validate(): void {
     if (!this.name || this.name.trim().length === 0) {
       throw new Error('El nombre del producto es requerido');
@@ -33,9 +26,6 @@ export class Product {
     }
   }
 
-  /**
-   * Reduce el stock del producto
-   */
   public reduceStock(quantity: number): void {
     if (quantity <= 0) {
       throw new Error('La cantidad debe ser mayor a 0');
@@ -49,9 +39,6 @@ export class Product {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Aumenta el stock del producto
-   */
   public increaseStock(quantity: number): void {
     if (quantity <= 0) {
       throw new Error('La cantidad debe ser mayor a 0');
@@ -61,9 +48,6 @@ export class Product {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Actualiza los datos del producto
-   */
   public update(data: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): void {
     if (data.name !== undefined) this.name = data.name;
     if (data.description !== undefined) this.description = data.description;
@@ -74,9 +58,6 @@ export class Product {
     this.validate();
   }
 
-  /**
-   * Convierte el producto a JSON
-   */
   public toJSON(): Record<string, any> {
     return {
       id: this.id,
@@ -89,9 +70,6 @@ export class Product {
     };
   }
 
-  /**
-   * Crea un producto desde JSON
-   */
   public static fromJSON(data: any): Product {
     return new Product(
       data.id,

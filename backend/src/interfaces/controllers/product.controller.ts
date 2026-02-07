@@ -1,38 +1,25 @@
-/**
- * Product Controller - Maneja las peticiones HTTP
- * Ahora delega la lógica compleja a los Casos de Uso
- */
 
 import { Request, Response } from 'express';
 
-// Importamos los Casos de Uso
 import { CreateProductUseCase } from '../../application/create-product.usecase.js';
 import { GetProductsUseCase } from '../../application/get-products.usecase.js';
 import { DeleteProductUseCase } from '../../application/delete-product.usecase.js';
 
-// Importamos el Repositorio (para las funciones que no tienen Caso de Uso aún)
 import { ProductRepository } from '../../domain/repositories/product.repository.js';
 
-/**
- * Helper para asegurar que el parámetro sea un string
- */
 function getStringParam(value: string | string[]): string {
   return Array.isArray(value) ? value[0] : value;
 }
 
 export class ProductController {
-  // El constructor recibe todas las piezas necesarias
   constructor(
     private createProductUseCase: CreateProductUseCase,
     private getProductsUseCase: GetProductsUseCase,
     private deleteProductUseCase: DeleteProductUseCase,
-    private productRepository: ProductRepository // Para Update y GetById
+    private productRepository: ProductRepository 
   ) {}
 
-  /**
-   * GET /api/products - Obtener todos los productos
-   * Lógica: Delega al Caso de Uso
-   */
+
   async getAllProducts(req: Request, res: Response): Promise<void> {
     try {
       const products = await this.getProductsUseCase.execute();
@@ -46,19 +33,13 @@ export class ProductController {
     }
   }
 
-  /**
-   * POST /api/products - Crear nuevo producto
-   * Lógica: Delega al Caso de Uso (que ya valida precios y nombres)
-   */
   async createProduct(req: Request, res: Response): Promise<void> {
     try {
-      // Enviamos el body directo. Las validaciones están en el UseCase.
       const product = await this.createProductUseCase.execute(req.body);
       
       res.status(201).json(product);
     } catch (error) {
       console.error('Error al crear producto:', error);
-      // Si falla la validación del negocio (ej: precio negativo), devolvemos 400
       res.status(400).json({ 
         error: 'No se pudo crear el producto',
         message: error instanceof Error ? error.message : 'Error desconocido'
@@ -66,10 +47,6 @@ export class ProductController {
     }
   }
 
-  /**
-   * DELETE /api/products/:id - Eliminar producto
-   * Lógica: Delega al Caso de Uso
-   */
   async deleteProduct(req: Request, res: Response): Promise<void> {
     try {
       const id = getStringParam(req.params.id);
@@ -86,13 +63,6 @@ export class ProductController {
     }
   }
 
-  // -------------------------------------------------------------------
-  // MÉTODOS DIRECTOS (Sin Caso de Uso para ahorrar tiempo)
-  // -------------------------------------------------------------------
-
-  /**
-   * GET /api/products/:id - Obtener por ID
-   */
   async getProductById(req: Request, res: Response): Promise<void> {
     try {
       const id = getStringParam(req.params.id);
@@ -110,13 +80,10 @@ export class ProductController {
     }
   }
 
-  /**
-   * PUT /api/products/:id - Actualizar producto
-   */
+
   async updateProduct(req: Request, res: Response): Promise<void> {
     try {
       const id = getStringParam(req.params.id);
-      // Validamos brevemente antes de llamar al repo
       if (req.body.price !== undefined && req.body.price <= 0) {
          res.status(400).json({ error: 'El precio debe ser positivo' });
          return;
@@ -133,9 +100,6 @@ export class ProductController {
     }
   }
 
-  /**
-   * GET /api/products/category/:category - Filtrar por categoría
-   */
   async getProductsByCategory(req: Request, res: Response): Promise<void> {
     try {
       const category = getStringParam(req.params.category);

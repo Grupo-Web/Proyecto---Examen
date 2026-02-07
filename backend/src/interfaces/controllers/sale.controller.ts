@@ -1,14 +1,7 @@
-/**
- * Sale Controller - Maneja las peticiones HTTP relacionadas con ventas
- */
-
 import { Request, Response } from 'express';
 import { SaleRepository } from '../../domain/repositories/sale.repository.js';
 import { ProductRepository } from '../../domain/repositories/product.repository.js';
 
-/**
- * Helper para obtener string de req.params
- */
 function getStringParam(value: string | string[]): string {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -19,9 +12,6 @@ export class SaleController {
     private productRepository: ProductRepository
   ) {}
 
-  /**
-   * GET /api/sales - Obtener todas las ventas
-   */
   async getAllSales(req: Request, res: Response): Promise<void> {
     try {
       const sales = await this.saleRepository.findAll();
@@ -35,9 +25,6 @@ export class SaleController {
     }
   }
 
-  /**
-   * GET /api/sales/:id - Obtener venta por ID
-   */
   async getSaleById(req: Request, res: Response): Promise<void> {
     try {
       const id = getStringParam(req.params.id);
@@ -58,14 +45,10 @@ export class SaleController {
     }
   }
 
-  /**
-   * POST /api/sales - Registrar nueva venta
-   */
   async createSale(req: Request, res: Response): Promise<void> {
     try {
       const { items } = req.body;
 
-      // Validar que hay items
       if (!items || !Array.isArray(items) || items.length === 0) {
         res.status(400).json({ 
           error: 'Se requiere al menos un producto en la venta' 
@@ -73,12 +56,10 @@ export class SaleController {
         return;
       }
 
-      // Validar y verificar stock de cada producto
       let total = 0;
       const validatedItems = [];
 
       for (const item of items) {
-        // Validar campos requeridos
         if (!item.productId || !item.quantity || item.quantity <= 0) {
           res.status(400).json({ 
             error: 'Cada item debe tener productId y quantity válidos' 
@@ -86,7 +67,6 @@ export class SaleController {
           return;
         }
 
-        // Verificar que el producto existe
         const product = await this.productRepository.findById(item.productId);
         if (!product) {
           res.status(404).json({ 
@@ -95,7 +75,6 @@ export class SaleController {
           return;
         }
 
-        // Verificar stock disponible
         if (product.stock < item.quantity) {
           res.status(400).json({ 
             error: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Solicitado: ${item.quantity}` 
@@ -115,14 +94,12 @@ export class SaleController {
         });
       }
 
-      // Crear la venta
       const sale = await this.saleRepository.save({
         date: new Date(),
         total,
         items: validatedItems
       });
 
-      // Actualizar stock de productos
       for (const item of items) {
         const product = await this.productRepository.findById(item.productId);
         if (product) {
@@ -143,9 +120,6 @@ export class SaleController {
     }
   }
 
-  /**
-   * GET /api/sales/date-range - Obtener ventas por rango de fechas
-   */
   async getSalesByDateRange(req: Request, res: Response): Promise<void> {
     try {
       const { startDate, endDate } = req.query;

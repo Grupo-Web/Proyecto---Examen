@@ -1,19 +1,12 @@
-// ============================================
-// ARCHIVO: frontend/assets/js/products.js
-// DESCRIPCIÓN: Lógica del mantenedor de productos
-// ============================================
 
-// Referencias a elementos del DOM
 const productForm = document.getElementById('product-form');
 const productsBody = document.getElementById('products-body');
 const btnSave = document.getElementById('btn-save');
 const btnCancel = document.getElementById('btn-cancel');
 
-// Variables de estado
 let isEditing = false;
 let currentProductId = null;
 
-// 1. Función para LISTAR (Obtener productos de la API)
 const loadProducts = async () => {
     try {
         console.log('📥 Cargando productos...');
@@ -33,7 +26,6 @@ const loadProducts = async () => {
     }
 };
 
-// 2. Función para RENDERIZAR la tabla
 const renderTable = (products) => {
     productsBody.innerHTML = ''; // Limpiar tabla
     
@@ -60,7 +52,6 @@ const renderTable = (products) => {
     });
 };
 
-// 3. Función para GUARDAR o EDITAR
 productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -73,7 +64,6 @@ productForm.addEventListener('submit', async (e) => {
         createdAt: new Date()
     };
 
-    // Validaciones básicas
     if (!productData.name) {
         alert('El nombre es obligatorio');
         return;
@@ -120,7 +110,6 @@ productForm.addEventListener('submit', async (e) => {
     }
 });
 
-// 4. Función para ELIMINAR
 const deleteProduct = async (id) => {
     if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
         try {
@@ -140,7 +129,6 @@ const deleteProduct = async (id) => {
     }
 };
 
-// 5. Preparar el formulario para EDITAR
 window.prepareEdit = (id, name, description, category, price, stock) => {
     isEditing = true;
     currentProductId = id;
@@ -155,11 +143,9 @@ window.prepareEdit = (id, name, description, category, price, stock) => {
     btnSave.textContent = "Actualizar Producto";
     btnCancel.style.display = "inline-block";
     
-    // Scroll al formulario
     document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
 };
 
-// 6. Resetear formulario
 const resetForm = () => {
     isEditing = false;
     currentProductId = null;
@@ -170,10 +156,8 @@ const resetForm = () => {
     btnCancel.style.display = "none";
 };
 
-// Event listeners
 btnCancel.addEventListener('click', resetForm);
 
-// Cargar datos al iniciar la página
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Página de productos inicializada');
     loadProducts();

@@ -1,7 +1,3 @@
-/**
- * Sale Repository Interface - Define el contrato para persistencia de ventas
- */
-
 export interface SaleItemData {
   productId: string;
   productName: string;

@@ -1,25 +1,25 @@
-/* --- VARIABLES DE COLOR (Basadas en tema Café) --- */
+
 :root {
     --coffee-dark: #3e2723;
     --coffee-medium: #5d4037;
     --coffee-light: #d7ccc8;
-    --bg-page: #f4f1ea;       /* Fondo crema suave */
+    --bg-page: #f4f1ea;       
     --bg-card: #ffffff;
     --text-main: #333333;
     --text-muted: #666666;
-    --accent-green: #2e7d32;  /* Para botones de éxito/editar */
-    --accent-red: #c62828;    /* Para borrar */
+    --accent-green: #2e7d32; 
+    --accent-red: #c62828;    
     --border-radius: 8px;
     --shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* --- ESTRUCTURA GENERAL DE LA PÁGINA --- */
+
 body {
     background-color: var(--bg-page);
 }
 
 .products-container {
-    padding-top: 100px; /* Espacio para el Navbar fijo */
+    padding-top: 100px; 
     padding-bottom: 50px;
     min-height: 80vh;
 }
@@ -35,7 +35,6 @@ body {
     margin-bottom: 0.5rem;
 }
 
-/* Grid Layout: En pantallas grandes, Formulario a la izquierda, Tabla a la derecha */
 .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -44,21 +43,19 @@ body {
 
 @media (min-width: 992px) {
     .content-grid {
-        grid-template-columns: 350px 1fr; /* Formulario fijo 350px, Tabla ocupa el resto */
+        grid-template-columns: 350px 1fr; 
         align-items: start;
     }
 }
 
-/* --- ESTILOS DE TARJETAS (Cards) --- */
 .form-card, .table-card {
     background: var(--bg-card);
     padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    border-top: 5px solid var(--coffee-medium); /* Detalle decorativo superior */
+    border-top: 5px solid var(--coffee-medium); 
 }
 
-/* --- FORMULARIO --- */
 .form-card h3 {
     margin-bottom: 1.5rem;
     color: var(--coffee-medium);
@@ -106,7 +103,6 @@ body {
     flex: 1;
 }
 
-/* Botones del formulario */
 .form-actions {
     margin-top: 1.5rem;
     display: flex;
@@ -145,7 +141,6 @@ body {
     background-color: #757575;
 }
 
-/* --- TABLA --- */
 .table-header {
     display: flex;
     justify-content: space-between;
@@ -164,7 +159,7 @@ body {
 }
 
 .table-responsive {
-    overflow-x: auto; /* Scroll horizontal en móviles */
+    overflow-x: auto; 
 }
 
 .styled-table {
@@ -196,7 +191,6 @@ body {
     border-bottom: 2px solid var(--coffee-medium);
 }
 
-/* Acciones en la tabla (Botones pequeños) */
 .action-btn {
     padding: 5px 10px;
     border: none;
@@ -208,7 +202,7 @@ body {
 }
 
 .btn-edit {
-    background-color: #fbc02d; /* Amarillo oscuro */
+    background-color: #fbc02d;
     color: #333;
 }
 

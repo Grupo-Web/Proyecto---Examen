@@ -1,7 +1,3 @@
-/**
- * Product Repository Implementation - Infrastructure Layer
- * Implementación de persistencia de productos con SQLite
- */
 
 import { ProductRepository, ProductData } from '../../domain/repositories/product.repository.js';
 import { getDatabase } from '../database/sqlite/sqlite.connection.js';

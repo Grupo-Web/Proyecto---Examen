@@ -1,6 +1,3 @@
-/**
- * Export Report Use Case - Lógica de negocio para exportar reportes
- */
 
 import { SaleRepository, SaleData } from '../domain/repositories/sale.repository.js';
 
@@ -16,7 +13,6 @@ export class ExportReportUseCase {
   async execute(query: ExportReportQuery): Promise<string> {
     const { format, startDate, endDate } = query;
 
-    // Obtener ventas según filtros
     let sales: SaleData[];
     if (startDate && endDate) {
       sales = await this.saleRepository.findByDateRange(startDate, endDate);
@@ -24,7 +20,6 @@ export class ExportReportUseCase {
       sales = await this.saleRepository.findAll();
     }
 
-    // Exportar según formato
     if (format === 'json') {
       return this.exportJSON(sales);
     } else {
@@ -47,10 +42,8 @@ export class ExportReportUseCase {
   }
 
   private exportCSV(sales: SaleData[]): string {
-    // Header
     let csv = 'ID,Fecha,Total,Cantidad Items,Productos\n';
 
-    // Filas
     for (const sale of sales) {
       const products = sale.items
         .map(item => `${item.productName} (x${item.quantity})`)
@@ -72,7 +65,6 @@ export class ExportReportUseCase {
     averageTicket: number;
     topProducts: any[];
   }> {
-    // Obtener ventas
     let sales: SaleData[];
     if (startDate && endDate) {
       sales = await this.saleRepository.findByDateRange(startDate, endDate);
