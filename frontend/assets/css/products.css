@@ -1,0 +1,220 @@
+/* --- VARIABLES DE COLOR (Basadas en tema Café) --- */
+:root {
+    --coffee-dark: #3e2723;
+    --coffee-medium: #5d4037;
+    --coffee-light: #d7ccc8;
+    --bg-page: #f4f1ea;       /* Fondo crema suave */
+    --bg-card: #ffffff;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --accent-green: #2e7d32;  /* Para botones de éxito/editar */
+    --accent-red: #c62828;    /* Para borrar */
+    --border-radius: 8px;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* --- ESTRUCTURA GENERAL DE LA PÁGINA --- */
+body {
+    background-color: var(--bg-page);
+}
+
+.products-container {
+    padding-top: 100px; /* Espacio para el Navbar fijo */
+    padding-bottom: 50px;
+    min-height: 80vh;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    color: var(--coffee-dark);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Grid Layout: En pantallas grandes, Formulario a la izquierda, Tabla a la derecha */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 992px) {
+    .content-grid {
+        grid-template-columns: 350px 1fr; /* Formulario fijo 350px, Tabla ocupa el resto */
+        align-items: start;
+    }
+}
+
+/* --- ESTILOS DE TARJETAS (Cards) --- */
+.form-card, .table-card {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border-top: 5px solid var(--coffee-medium); /* Detalle decorativo superior */
+}
+
+/* --- FORMULARIO --- */
+.form-card h3 {
+    margin-bottom: 1.5rem;
+    color: var(--coffee-medium);
+    border-bottom: 1px solid var(--coffee-light);
+    padding-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--coffee-medium);
+    box-shadow: 0 0 0 3px rgba(93, 64, 55, 0.1);
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Botones del formulario */
+.form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-primary {
+    background-color: var(--coffee-medium);
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+    text-align: center;
+}
+
+.btn-primary:hover {
+    background-color: var(--coffee-dark);
+}
+
+.btn-secondary {
+    background-color: #9e9e9e;
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #757575;
+}
+
+/* --- TABLA --- */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.search-box {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding-left: 15px;
+    width: 200px;
+}
+
+.table-responsive {
+    overflow-x: auto; /* Scroll horizontal en móviles */
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.styled-table thead tr {
+    background-color: var(--coffee-medium);
+    color: white;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #fcfcfc;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid var(--coffee-medium);
+}
+
+/* Acciones en la tabla (Botones pequeños) */
+.action-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-right: 5px;
+    color: white;
+}
+
+.btn-edit {
+    background-color: #fbc02d; /* Amarillo oscuro */
+    color: #333;
+}
+
+.btn-delete {
+    background-color: var(--accent-red);
+}
+
+.btn-edit:hover { background-color: #f9a825; }
+.btn-delete:hover { background-color: #b71c1c; }

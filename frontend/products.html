@@ -3,79 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mantenedor de Productos - Cafetería</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <title>Gestión de Productos - Café del Valle</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+    
+    <link rel="stylesheet" href="assets/css/products.css">
 </head>
 <body>
 
-    <header>
-        <h1>Gestión de Productos</h1>
+<header class="navbar">
+    <div class="container nav-content">
+        <div class="brand">
+            <img src="assets/images/logo.png" alt="Logo" class="logoPrincipal">
+            <span class="brand-name">Café del Valle</span>
+        </div>
+
         <nav>
-            <a href="index.html">Inicio</a> | 
-            <a href="sales.html">Ventas (Proceso)</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="index.html#nosotros">Nosotros</a></li>
+                <li><a href="products.html" class="active">Productos</a></li>
+                <li><a href="register-sale.html">Ventas</a></li>
+                <li><a href="dashboard.html">Reportes</a></li>
+            </ul>
         </nav>
-    </header>
+    </div>
+</header>
 
-    <main>
-        <section id="form-section">
-            <h2 id="form-title">Agregar Nuevo Producto</h2>
-            <form id="product-form">
-                <input type="hidden" id="product-id">
+<main class="products-container">
+    
+    <div class="container">
+        <div class="page-header">
+            <h2>📦 Inventario de Productos</h2>
+            <p>Administra el catálogo de cafetería y pastelería.</p>
+        </div>
 
-                <div class="form-group">
-                    <label for="name">Nombre:</label>
-                    <input type="text" id="name" required>
+        <div class="content-grid">
+            
+            <section class="form-card">
+                <h3><span id="form-title">Nuevo Producto</span></h3>
+                <form id="product-form">
+                    <input type="hidden" id="product-id">
+
+                    <div class="form-group">
+                        <label for="name">Nombre del producto</label>
+                        <input type="text" id="name" placeholder="Ej: Capuchino Vainilla" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Categoría</label>
+                        <select id="category" required>
+                            <option value="" disabled selected>Selecciona una opción</option>
+                            <option value="Café Caliente">Café Caliente</option>
+                            <option value="Bebidas Frías">Bebidas Frías</option>
+                            <option value="Postres">Postres</option>
+                            <option value="Salados">Salados</option>
+                            <option value="Grano/Molido">Grano/Molido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea id="description" rows="2" placeholder="Breve descripción..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Precio ($)</label>
+                            <input type="number" id="price" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock">Stock Inicial</label>
+                            <input type="number" id="stock" min="0" placeholder="0" required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="btn-save" class="btn-primary">Guardar Producto</button>
+                        <button type="button" id="btn-cancel" class="btn-secondary" style="display: none;">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="table-card">
+                <div class="table-header">
+                    <h3>Listado Actual</h3>
+                    <input type="text" id="search-input" placeholder="🔍 Buscar producto..." class="search-box">
                 </div>
-
-                <div class="form-group">
-                    <label for="description">Descripción:</label>
-                    <input type="text" id="description" required placeholder="Ej: Café con granos de altura">
+                
+                <div class="table-responsive">
+                    <table class="styled-table" id="products-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-body">
+                            </tbody>
+                    </table>
                 </div>
+            </section>
 
-                <div class="form-group">
-                    <label for="category">Categoría:</label>
-                    <select id="category" required>
-                        <option value="Café">Café</option>
-                        <option value="Bollería">Bollería</option>
-                        <option value="Bebidas Frías">Bebidas Frías</option>
-                    </select>
-                </div>
+        </div>
+    </div>
+</main>
 
-                <div class="form-group">
-                    <label for="price">Precio:</label>
-                    <input type="number" id="price" required step="0.01">
-                </div>
+<footer class="footer">
+    <div class="container footer-content">
+        <div class="footer-column">
+            <h3>Café del Valle</h3>
+            <p>Sistema de gestión administrativa v1.0</p>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Café del Valle — Todos los derechos reservados</p>
+        </div>
+    </div>
+</footer>
 
-                <div class="form-group">
-                    <label for="stock">Stock:</label>
-                    <input type="number" id="stock" required>
-                </div>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/products.js"></script>
 
-                <button type="submit" id="btn-save">Guardar Producto</button>
-                <button type="button" id="btn-cancel" style="display:none;">Cancelar Edición</button>
-            </form>
-        </section>
-
-        <hr>
-
-        <section id="list-section">
-            <h2>Inventario Actual</h2>
-            <table border="1" id="products-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="products-body">
-                    </tbody>
-            </table>
-        </section>
-    </main>
-
-    <script src="assets/js/api.js"></script> <script src="assets/js/products.js"></script>
 </body>
 </html>
