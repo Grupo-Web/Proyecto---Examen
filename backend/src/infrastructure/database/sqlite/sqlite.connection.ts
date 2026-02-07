@@ -65,14 +65,11 @@ async function createTables(): Promise<void> {
       name TEXT NOT NULL,
       description TEXT,
       price REAL NOT NULL,
-<<<<<<< Updated upstream
-=======
       category TEXT NOT NULL,
->>>>>>> Stashed changes
       stock INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
-    )
+    );
   `);
 
   // Tabla de ventas
@@ -82,7 +79,7 @@ async function createTables(): Promise<void> {
       total REAL NOT NULL,
       sale_date TEXT NOT NULL,
       created_at TEXT NOT NULL
-    )
+    );
   `);
 
   // Tabla de items de venta
@@ -96,7 +93,7 @@ async function createTables(): Promise<void> {
       subtotal REAL NOT NULL,
       FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
       FOREIGN KEY (product_id) REFERENCES products(id)
-    )
+    );
   `);
 
   console.log('✅ Tablas verificadas/creadas correctamente');
