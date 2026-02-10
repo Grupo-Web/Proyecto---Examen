@@ -39,8 +39,8 @@ const renderTable = (products) => {
     products.forEach(product => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${product.id}</td>
             <td>${product.name}</td>
+            <td>${product.category}</td>
             <td>$${product.price.toFixed(2)}</td>
             <td>${product.stock}</td>
             <td>
