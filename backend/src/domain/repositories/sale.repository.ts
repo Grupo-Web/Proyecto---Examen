@@ -7,7 +7,7 @@ export interface SaleItemData {
 }
 
 export interface SaleData {
-  id?: string;
+  id: string;
   date: Date;
   total: number;
   items: SaleItemData[];

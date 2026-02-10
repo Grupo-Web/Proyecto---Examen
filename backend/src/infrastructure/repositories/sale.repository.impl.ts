@@ -37,24 +37,41 @@ export class SaleRepositoryImpl implements SaleRepository {
     return created;
   }
 
-  async findAll(): Promise<Sale[]> {
-    const db = await getDatabase();
-    const sales = await db.all('SELECT * FROM sales ORDER BY sale_date DESC');
-    
-    const result: Sale[] = [];
-    for (const saleRow of sales) {
+async findAll(): Promise<Sale[]> {
+  const db = await getDatabase();
+  const sales = await db.all('SELECT * FROM sales ORDER BY sale_date DESC');
+  
+  const result: Sale[] = [];
+  
+  for (const saleRow of sales) {
+    try {
       const items = await this.findItemsBySaleId(saleRow.id);
-      result.push(Sale.fromJSON({
+      
+
+      if (items.length === 0) {
+        console.warn(`⚠️ Venta ${saleRow.id} no tiene items, omitiendo...`);
+        continue; 
+      }
+      
+      const sale = Sale.fromJSON({
         id: saleRow.id,
         total: saleRow.total,
         date: saleRow.sale_date,
         createdAt: saleRow.created_at,
         items: items.map(i => i.toJSON())
-      }));
-    }
+      });
+      
+      result.push(sale);
+      
+    } catch (error) {
 
-    return result;
+      console.error(`❌ Error al cargar venta ${saleRow.id}:`, error);
+      continue;
+    }
   }
+
+  return result;
+}
 
   async findById(id: string): Promise<Sale | null> {
     const db = await getDatabase();
