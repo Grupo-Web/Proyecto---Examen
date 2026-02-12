@@ -1,7 +1,3 @@
-/**
- * Server Entry Point
- * Inicia el servidor HTTP
- */
 
 import { App } from './app.js';
 
@@ -35,7 +31,6 @@ async function startServer() {
       `);
     });
 
-    // Manejo de errores del servidor
     process.on('SIGINT', async () => {
       console.log('\n🛑 Cerrando servidor...');
       await app.close();

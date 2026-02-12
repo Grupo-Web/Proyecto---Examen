@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showLoading();
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         const salesResponse = await fetch(`${API_URL}/sales`, { 
             signal: controller.signal 
@@ -268,7 +268,7 @@ function fillRecentSalesTable(recentSales) {
 
     if (recentSales.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="4" style="text-align:center; color:#999;">No hay ventas registradas</td>';
+        tr.innerHTML = '<td colspan="3" style="text-align:center; color:#999;">No hay ventas registradas</td>';
         tbody.appendChild(tr);
         return;
     }
@@ -278,7 +278,6 @@ function fillRecentSalesTable(recentSales) {
         tr.innerHTML = `
             <td>${sale.time}<br><small style="color:#999;">${sale.date}</small></td>
             <td>${sale.products}</td>
-            <td>-</td>
             <td><strong>${sale.total}</strong></td>
         `;
         tbody.appendChild(tr);
